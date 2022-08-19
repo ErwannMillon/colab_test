@@ -433,6 +433,7 @@ class GaussianDiffusion:
                 print("Saving outputs")
                 torchaudio.save(f"./outputs/sampleoutput__{i}.mp3", final['sample'].squeeze(0).cpu(), 22050)
                 torchaudio.save(f"./outputs/x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0).cpu(), 22050)
+            i += 1
 
 
         return final["sample"]
