@@ -417,7 +417,8 @@ class GaussianDiffusion:
         :return: a non-differentiable batch of samples.
         """
         final = None
-        for i , sample in enumerate(self.p_sample_loop_progressive)(
+        i = 0
+        for sample in self.p_sample_loop_progressive(
             model,
             shape,
             noise=noise,
