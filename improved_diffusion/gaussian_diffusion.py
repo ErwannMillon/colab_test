@@ -430,8 +430,8 @@ class GaussianDiffusion:
         ):
             final = sample
             if i % 100 == 0:
-                torchaudio.save(f"./sampleoutput__{i}.mp3", final['sample'].squeeze(0), 22050)
-                torchaudio.save("./x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0), 22050)
+                torchaudio.save(f"./sampleoutput__{i}.mp3", final['sample'].squeeze(0).cpu(), 22050)
+                torchaudio.save("./x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0).cpu(), 22050)
 
 
         return final["sample"]
