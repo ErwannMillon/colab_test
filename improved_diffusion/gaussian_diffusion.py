@@ -6,6 +6,7 @@ Docstrings have been added, as well as DDIM sampling and a new collection of bet
 """
 
 import enum
+import torchaudio
 import math
 
 import numpy as np
@@ -416,7 +417,7 @@ class GaussianDiffusion:
         :return: a non-differentiable batch of samples.
         """
         final = None
-        for sample in self.p_sample_loop_progressive(
+        for i , sample in enumerate(self.p_sample_loop_progressive)(
             model,
             shape,
             noise=noise,
@@ -427,6 +428,11 @@ class GaussianDiffusion:
             progress=progress,
         ):
             final = sample
+            if i % 100 == 0:
+                torchaudio.save(f"./sampleoutput__{i}.mp3", final['sample'].squeeze(0), 22050)
+                torchaudio.save("./x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0), 22050)
+
+
         return final["sample"]
 
     def p_sample_loop_progressive(
@@ -456,6 +462,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
+        progress=True
 
         if progress:
             # Lazy import so that we don't depend on tqdm.
