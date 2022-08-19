@@ -1,5 +1,6 @@
 from abc import abstractmethod
-
+from turtle import forward
+from torchinfo import summary
 import math
 
 import numpy as np
@@ -57,13 +58,13 @@ class Upsample(nn.Module):
                  upsampling occurs in the inner-two dimensions.
     """
 
-    def __init__(self, channels, use_conv, dims=2):
+    def __init__(self, channels, use_conv, stride=3, dims=1):
         super().__init__()
         self.channels = channels
         self.use_conv = use_conv
         self.dims = dims
         if use_conv:
-            self.conv = conv_nd(dims, channels, channels, 3, padding=1)
+            self.conv = conv_nd(dims, channels, channels, stride, padding=1)
 
     def forward(self, x):
         assert x.shape[1] == self.channels
@@ -125,10 +126,11 @@ class ResBlock(TimestepBlock):
         emb_channels,
         dropout,
         out_channels=None,
-        use_conv=False,
+        use_conv=True,
         use_scale_shift_norm=False,
         dims=2,
         use_checkpoint=False,
+        stride=3,
     ):
         super().__init__()
         self.channels = channels
@@ -138,11 +140,11 @@ class ResBlock(TimestepBlock):
         self.use_conv = use_conv
         self.use_checkpoint = use_checkpoint
         self.use_scale_shift_norm = use_scale_shift_norm
-
+        self.stride = stride
         self.in_layers = nn.Sequential(
             normalization(channels),
             SiLU(),
-            conv_nd(dims, channels, self.out_channels, 3, padding=1),
+            conv_nd(dims, channels, self.out_channels, self.stride, padding=1),
         )
         self.emb_layers = nn.Sequential(
             SiLU(),
@@ -156,15 +158,16 @@ class ResBlock(TimestepBlock):
             SiLU(),
             nn.Dropout(p=dropout),
             zero_module(
-                conv_nd(dims, self.out_channels, self.out_channels, 3, padding=1)
+                conv_nd(dims, self.out_channels, self.out_channels, self.stride, padding=1)
             ),
         )
 
         if self.out_channels == channels:
             self.skip_connection = nn.Identity()
-        elif use_conv:
+        ###Change
+        if use_conv:
             self.skip_connection = conv_nd(
-                dims, channels, self.out_channels, 3, padding=1
+                dims, channels, self.out_channels, self.stride, padding=1, 
             )
         else:
             self.skip_connection = conv_nd(dims, channels, self.out_channels, 1)
@@ -354,7 +357,7 @@ class UNetModel(nn.Module):
         ch = model_channels
         ds = 1
         for level, mult in enumerate(channel_mult):
-            for _ in range(num_res_blocks):
+            for i in range(num_res_blocks):
                 layers = [
                     ResBlock(
                         ch,
@@ -480,15 +483,43 @@ class UNetModel(nn.Module):
             emb = emb + self.label_emb(y)
 
         h = x.type(self.inner_dtype)
+
+        # test = nn.Sequential(self.input_blocks, 
+        #                     self.middle_block,
+        #                     self.output_blocks,
+        #                     self.out)
+        # class test_class(nn.Module):
+        #     def __init__(self, x, emb) -> None:
+        #         super().__init__()
+        #         self.layers = x
+        #         self.emb = emb 
+        #     def forward(data):
+        #         return self.layers(data, emb)
+                
+        # testclass = test_class(test) 
+        # summary(testclass, input_data=h)
         for module in self.input_blocks:
             h = module(h, emb)
+            print(h.shape)
             hs.append(h)
         h = self.middle_block(h, emb)
+        print("middle")
+        print(h.shape)
+        print()
         for module in self.output_blocks:
-            cat_in = th.cat([h, hs.pop()], dim=1)
+            cat_term = hs.pop()
+            if h.shape != cat_term:
+                diff = h.shape[-1] - cat_term.shape[-1]
+                cat_term = th.nn.functional.pad(cat_term, (0, diff), mode='constant', value=0)
+            cat_in = th.cat([h, cat_term], dim=1)
             h = module(cat_in, emb)
+            print(h.shape)
         h = h.type(x.dtype)
-        return self.out(h)
+        print(h.shape)
+        output = self.out(h)
+        print("out shape:")
+        print(output.shape)
+        return output
 
     def get_feature_vectors(self, x, timesteps, y=None):
         """

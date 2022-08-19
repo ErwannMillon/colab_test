@@ -1,8 +1,11 @@
 """
+
 Train a diffusion model on images.
 """
 
 import argparse
+from re import I
+import librosa
 
 from improved_diffusion import dist_util, logger
 from improved_diffusion.image_datasets import load_data
@@ -13,9 +16,21 @@ from improved_diffusion.script_util import (
     args_to_dict,
     add_dict_to_argparser,
 )
+import torch
+import torchaudio
 from improved_diffusion.train_util import TrainLoop
 
+def trim_audio_tensor(audio, sr, seconds, start=0):
+	"""Takes a 1d tensor as input"""
+	return(audio[start * sr:(start * sr) + sr * seconds])
 
+def resample(audio, oldsr, newsr):
+	audio = torchaudio.transforms.Resample(oldsr, newsr)(audio[:1, :])
+	return(audio, newsr)
+
+import os
+files = [f for f in os.listdir('./scripts')]
+print(files)
 def main():
     args = create_argparser().parse_args()
 
@@ -30,13 +45,19 @@ def main():
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion)
 
     logger.log("creating data loader...")
-    data = load_data(
-        data_dir=args.data_dir,
-        batch_size=args.batch_size,
-        image_size=args.image_size,
-        class_cond=args.class_cond,
-    )
+    # data = load_data(
+    #     data_dir=args.data_dir,
+    #     batch_size=args.batch_size,
+    #     image_size=args.image_size,
+    #     class_cond=args.class_cond,
+    # )
 
+    audio, sr = librosa.load("./scripts/test.mp3", duration=2, sr=22050) 
+    audio = torch.from_numpy(audio)
+    torchaudio.save("./scripts/sample.mp3", audio.unsqueeze(0), sr)
+    audio = audio.unsqueeze(0).unsqueeze(0)
+    # data = (audio, None)
+    data = (torch.ones(128).unsqueeze(0).unsqueeze(0), None)
     logger.log("training...")
     TrainLoop(
         model=model,
@@ -57,6 +78,7 @@ def main():
     ).run_loop()
 
 
+
 def create_argparser():
     defaults = dict(
         data_dir="",
@@ -72,6 +94,12 @@ def create_argparser():
         resume_checkpoint="",
         use_fp16=False,
         fp16_scale_growth=1e-3,
+        noise_schedule="linear",
+        diffusion_steps=4000,
+        num_res_blocks=3,
+        num_channels=128,
+        image_size=22050
+
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

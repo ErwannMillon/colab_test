@@ -51,9 +51,10 @@ def main():
         )
         sample = sample_fn(
             model,
-            (args.batch_size, 3, args.image_size, args.image_size),
+            ###SHAPE MOD
+            (args.batch_size, 1, 44100),
             clip_denoised=args.clip_denoised,
-            model_kwargs=model_kwargs,
+                        model_kwargs=model_kwargs,
         )
         sample = ((sample + 1) * 127.5).clamp(0, 255).to(th.uint8)
         sample = sample.permute(0, 2, 3, 1)
@@ -92,9 +93,10 @@ def create_argparser():
     defaults = dict(
         clip_denoised=True,
         num_samples=10000,
-        batch_size=16,
+        ##CHAMNGED
+        batch_size=1,
         use_ddim=False,
-        model_path="",
+        model_path="./saved_models/model000060.pt",
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

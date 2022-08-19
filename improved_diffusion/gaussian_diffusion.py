@@ -326,6 +326,7 @@ class GaussianDiffusion:
         }
 
     def _predict_xstart_from_eps(self, x_t, t, eps):
+        eps = th.nn.functional.pad(eps, (0, x_t.shape[-1] - eps.shape[-1]))
         assert x_t.shape == eps.shape
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
@@ -437,7 +438,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         model_kwargs=None,
         device=None,
-        progress=False,
+        progress=True,
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -473,6 +474,7 @@ class GaussianDiffusion:
                     denoised_fn=denoised_fn,
                     model_kwargs=model_kwargs,
                 )
+                print("output in loop")
                 yield out
                 img = out["sample"]
 
@@ -746,7 +748,7 @@ class GaussianDiffusion:
                 terms["loss"] = terms["mse"]
         else:
             raise NotImplementedError(self.loss_type)
-
+        print("LOSSL MSE : ", terms['loss'])
         return terms
 
     def _prior_bpd(self, x_start):
