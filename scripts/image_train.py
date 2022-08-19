@@ -56,8 +56,8 @@ def main():
     audio = torch.from_numpy(audio)
     torchaudio.save("./scripts/sample.mp3", audio.unsqueeze(0), sr)
     audio = audio.unsqueeze(0).unsqueeze(0)
-    # data = (audio, None)
-    data = (torch.ones(128).unsqueeze(0).unsqueeze(0), None)
+    data = (audio, None)
+    # data = (torch.ones(128).unsqueeze(0).unsqueeze(0), None)
     logger.log("training...")
     TrainLoop(
         model=model,
