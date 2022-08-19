@@ -429,7 +429,8 @@ class GaussianDiffusion:
             progress=progress,
         ):
             final = sample
-            if i % 100 == 0:
+            if i % 10 == 0:
+                print("Saving outputs")
                 torchaudio.save(f"./outputs/sampleoutput__{i}.mp3", final['sample'].squeeze(0).cpu(), 22050)
                 torchaudio.save(f"./outputs/x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0).cpu(), 22050)
 
@@ -462,6 +463,8 @@ class GaussianDiffusion:
             img = noise
         else:
             img = th.randn(*shape, device=device)
+        ### CHANGE IN CONFIG
+        self.num_timesteps = 200
         indices = list(range(self.num_timesteps))[::-1]
         progress=True
 
