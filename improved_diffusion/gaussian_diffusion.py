@@ -465,7 +465,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         ### CHANGE IN CONFIG
-        self.num_timesteps = 200
+        self.num_timesteps = 4000
         indices = list(range(self.num_timesteps))[::-1]
         progress=True
 
