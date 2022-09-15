@@ -98,8 +98,8 @@ def create_model(
 ):
     if image_size == 256:
         channel_mult = (1, 1, 2, 2, 4, 4)
-    elif image_size == 64:
-        channel_mult = (1, 2, 3, 4)
+    elif image_size == 64 or image_size == 128:
+        channel_mult = (1, 1, 2, 3, 4)
     elif image_size == 32:
         channel_mult = (1, 2, 2, 2)
     else:
@@ -108,8 +108,8 @@ def create_model(
     attention_ds = []
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
-
     return UNetModel(
+
         in_channels=1,
         dims=1,
         model_channels=num_channels,

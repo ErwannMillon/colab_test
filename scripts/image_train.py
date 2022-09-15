@@ -4,6 +4,7 @@ Train a diffusion model on images.
 """
 
 import argparse
+from random import sample
 from re import I
 import librosa
 
@@ -20,13 +21,15 @@ import torch
 import torchaudio
 from improved_diffusion.train_util import TrainLoop
 
-def trim_audio_tensor(audio, sr, seconds, start=0):
-	"""Takes a 1d tensor as input"""
-	return(audio[start * sr:(start * sr) + sr * seconds])
+def trim_audio_tensor(audio, sr, seconds, start=0, samples=None):
+    """Takes a 1d tensor as input"""
+    if samples:
+        return(audio[start * sr: (start * sr) + samples])
+    return(audio[start * sr:(start * sr) + sr * seconds])
 
 def resample(audio, oldsr, newsr):
-	audio = torchaudio.transforms.Resample(oldsr, newsr)(audio[:1, :])
-	return(audio, newsr)
+    audio = torchaudio.transforms.Resample(oldsr, newsr)(audio[:1, :])
+    return(audio, newsr)
 
 import os
 files = [f for f in os.listdir('./scripts')]
@@ -52,11 +55,19 @@ def main():
     #     class_cond=args.class_cond,
     # )
 
-    audio, sr = librosa.load("./scripts/test.mp3", duration=2, sr=22050) 
+    audio, sr = librosa.load("./scripts/test.mp3", duration=2, offset=50, sr=22050) 
+    audio = trim_audio_tensor(audio, sr, seconds=None, samples=32768)
     audio = torch.from_numpy(audio)
     torchaudio.save("./scripts/sample.mp3", audio.unsqueeze(0), sr)
     audio = audio.unsqueeze(0).unsqueeze(0)
     data = (audio, None)
+    torchaudio.save(f"./x_{0}.mp3", audio.squeeze(0), sr)
+    for i in range(5):
+        noise = torch.randn_like(audio)
+        x = diffusion.q_sample(audio, torch.tensor(5), noise=noise)
+        torchaudio.save(f"./x_{i+1}.mp3", x.squeeze(0), sr)
+    x = diffusion.q_sample(audio, torch.tensor(400))
+    torchaudio.save(f"./x_{400}.mp3", x.squeeze(0), sr)
     # data = (torch.ones(128).unsqueeze(0).unsqueeze(0), None)
     logger.log("training...")
     TrainLoop(
@@ -98,7 +109,7 @@ def create_argparser():
         diffusion_steps=4000,
         num_res_blocks=3,
         num_channels=128,
-        image_size=22050
+        image_size=128
 
     )
     defaults.update(model_and_diffusion_defaults())

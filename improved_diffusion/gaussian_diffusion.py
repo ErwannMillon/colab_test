@@ -327,7 +327,7 @@ class GaussianDiffusion:
         }
 
     def _predict_xstart_from_eps(self, x_t, t, eps):
-        eps = th.nn.functional.pad(eps, (0, x_t.shape[-1] - eps.shape[-1]))
+        # eps = th.nn.functional.pad(eps, (0, x_t.shape[-1] - eps.shape[-1]))
         assert x_t.shape == eps.shape
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
@@ -429,7 +429,7 @@ class GaussianDiffusion:
             progress=progress,
         ):
             final = sample
-            if i % 10 == 0:
+            if i % 199 == 0 or i %200==0:
                 print("Saving outputs")
                 torchaudio.save(f"./outputs/sampleoutput__{i}.mp3", final['sample'].squeeze(0).cpu(), 22050)
                 torchaudio.save(f"./outputs/x_startpred__{i}.mp3", final['pred_xstart'].squeeze(0).cpu(), 22050)
@@ -465,7 +465,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         ### CHANGE IN CONFIG
-        self.num_timesteps = 4000
+        self.num_timesteps = 1000
         indices = list(range(self.num_timesteps))[::-1]
         progress=True
 
@@ -761,6 +761,7 @@ class GaussianDiffusion:
         else:
             raise NotImplementedError(self.loss_type)
         print("LOSSL MSE : ", terms['loss'])
+        print("terms",terms)
         return terms
 
     def _prior_bpd(self, x_start):

@@ -179,6 +179,7 @@ class TrainLoop:
             self.save()
 
     def run_step(self, batch, cond):
+        print("step")
         self.forward_backward(batch, cond)
         if self.use_fp16:
             self.optimize_fp16()
