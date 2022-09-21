@@ -500,12 +500,12 @@ class UNetModel(nn.Module):
         # summary(testclass, input_data=h)
         for module in self.input_blocks:
             h = module(h, emb)
-            print(h.shape)
+            # print(h.shape)
             hs.append(h)
         h = self.middle_block(h, emb)
-        print("middle")
-        print(h.shape)
-        print()
+        # print("middle")
+        # print(h.shape)
+        # print()
         for module in self.output_blocks:
             cat_term = hs.pop()
             if h.shape != cat_term:
@@ -513,12 +513,12 @@ class UNetModel(nn.Module):
                 cat_term = th.nn.functional.pad(cat_term, (0, diff), mode='constant', value=0)
             cat_in = th.cat([h, cat_term], dim=1)
             h = module(cat_in, emb)
-            print(h.shape)
+            # print(h.shape)
         h = h.type(x.dtype)
-        print(h.shape)
+        # print(h.shape)
         output = self.out(h)
-        print("out shape:")
-        print(output.shape)
+        # print("out shape:")
+        # print(output.shape)
         return output
 
     def get_feature_vectors(self, x, timesteps, y=None):
