@@ -100,7 +100,7 @@ def create_argparser():
         ##CHAMNGED
         batch_size=1,
         use_ddim=False,
-        model_path="./saved_models/model000060.pt",
+        model_path="./saved_models/model001400.pt",
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
