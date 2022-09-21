@@ -56,7 +56,7 @@ def main():
     # )
 
     audio, sr = librosa.load("./scripts/test.mp3", duration=2, offset=50, sr=22050) 
-    audio = trim_audio_tensor(audio, sr, seconds=None, samples=32768)
+    audio = trim_audio_tensor(audio, sr, seconds=None, samples=32768/2)
     audio = torch.from_numpy(audio)
     torchaudio.save("./scripts/sample.mp3", audio.unsqueeze(0), sr)
     audio = audio.unsqueeze(0).unsqueeze(0)
@@ -109,7 +109,7 @@ def create_argparser():
         diffusion_steps=4000,
         num_res_blocks=3,
         num_channels=128,
-        image_size=128
+        image_size=64
 
     )
     defaults.update(model_and_diffusion_defaults())
