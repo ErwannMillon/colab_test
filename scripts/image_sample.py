@@ -52,7 +52,7 @@ def main():
         sample = sample_fn(
             model,
             ###SHAPE MOD
-            (args.batch_size, 1, 44100),
+            (args.batch_size, 1, 16384),
             clip_denoised=args.clip_denoised,
                         model_kwargs=model_kwargs,
         )
